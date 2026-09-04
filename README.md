@@ -1,6 +1,10 @@
 # YouTube to MP3
 
-A small Windows app. Paste a YouTube link, click Convert, get an MP3 with the title, artist and a square cover image already tagged.
+Tired of sketchy converter sites, ads on every click, and downloads that bring extras you never asked for? This is the fix. Copy a YouTube link, hit Convert (or Engage, if you're flying the F-16 skin), and you get a clean MP3 with the title, artist and square cover art already tagged.
+
+No ads. No bundled junk. No account. Open source.
+
+I built it because I pull songs and clips all the time for my own social and media content, and every site I tried was a mess. Figured I'd share it. Suggestions welcome: open an issue or leave a comment on the release, I'm open to anything. The skins started as UX design practice, a way to try different directions on one layout, and they were too fun to leave out.
 
 ![The app: pop art styling, one link field, one Convert button](docs/screenshot.png)
 
