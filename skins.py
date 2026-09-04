@@ -99,6 +99,14 @@ class Skin:
     shadows = {"lg": 6, "md": 4, "sm": 3}
     display_scale = 1.0
     animated = False
+    display_weight = "normal"
+    field_fg = None        # text inside fields; None means the skin's text colour
+    status_fg = None       # status headline; None means text
+    status_muted = None    # status detail; None means muted
+    button = None          # neutral buttons; None means surface
+    button_fg = None
+    chip_ok = None         # the FFmpeg-found chip; None means accent
+    chip_ok_fg = None
 
     families = {
         "display": ("Archivo Black", "Impact"),
@@ -231,6 +239,11 @@ class Skin:
         app.c.create_polygon(p(bx - 14), p(ty), p(bx + 2), p(ty - 8), p(bx + 2), p(ty + 8), fill=self.ink, outline=self.ink)
         app.c.create_polygon(p(bx - 8), p(ty), p(bx + 4), p(ty - 5), p(bx + 4), p(ty + 5), fill=self.surface, outline=self.surface)
         app.text(bx + 12, by + bh / 2, self.copy["tagline"], "body12b", anchor="w")
+
+    def status_panel(self, app, kind) -> bool:
+        """Optional backdrop behind the status area; kind is idle, working or done.
+        Return True when something was drawn so the app insets its text."""
+        return False
 
     def tick(self, app, phase):
         pass
@@ -365,172 +378,343 @@ class BlackOps(Skin):
         app.c.create_text(p(cx), p(cy + 9), text="EYES ONLY", font=app.fonts["label11b"], fill=self.error, angle=6)
 
 
-# ---- Fighter Jet: cockpit HUD with lights ----
+# ---- F-16 cockpit: glareshield, HUD, DED, ICP keys, MFD screen ----
 
 class FighterJet(Skin):
     key = "jet"
-    name = "FIGHTER JET"
+    name = "F-16"
 
-    bg = "#0A1220"
-    ink = "#39E0FF"
-    text = "#D8F6FF"
-    muted = "#6FA3B5"
-    placeholder = "#3F6B7A"
-    surface = "#0F1B2E"
-    field = "#0C1626"
-    primary = "#FFB000"
-    primary_fg = "#0A1220"
-    accent = "#39E0FF"
-    accent_fg = "#0A1220"
-    accent2 = "#39E0FF"
-    accent2_fg = "#0A1220"
-    working = "#FFB000"
-    working_fg = "#0A1220"
-    cancel = "#0F1B2E"
-    cancel_fg = "#39E0FF"
-    error = "#FF4D4D"
-    error_fg = "#0A1220"
-    disabled = "#15243C"
-    disabled_fg = "#3F6B7A"
-    hover = {"#FFB000": "#FFC43D", "#39E0FF": "#7FEBFF", "#0F1B2E": "#15243C"}
+    PANEL = "#4A4F52"      # dark gull gray, FS 36231, in cockpit shadow
+    GLARE = "#1E2022"
+    BEZEL = "#26282B"
+    SCREEN = "#0B0D0B"
+    KEY = "#2A2C2F"
+    HUD = "#4DFF4D"        # P43 phosphor, about 545 nm
+    HUD_DIM = "#2E8F2E"
+    MFD = "#5FE86A"
+    MFD_DIM = "#3FA84A"
+    AMBER = "#FFB000"
+    RED = "#FF3B30"
+    LIT_RED = "#C8102E"
 
-    border = 1
+    bg = PANEL
+    ink = BEZEL
+    text = "#E6E6E6"
+    muted = "#A6A9AD"
+    placeholder = "#2F6B36"
+    surface = SCREEN
+    field = SCREEN
+    field_fg = MFD
+    button = KEY
+    button_fg = "#E6E6E6"
+    primary = AMBER
+    primary_fg = "#111111"
+    accent = KEY
+    accent_fg = "#E6E6E6"
+    accent2 = MFD
+    accent2_fg = SCREEN
+    working = SCREEN
+    working_fg = HUD
+    cancel = LIT_RED
+    cancel_fg = "#FFFFFF"
+    error = AMBER
+    error_fg = "#111111"
+    disabled = "#2A2C2F"
+    disabled_fg = "#6B6E72"
+    chip_ok = MFD
+    chip_ok_fg = SCREEN
+    status_fg = MFD
+    status_muted = MFD_DIM
+    hover = {AMBER: "#FFC43D", KEY: "#383B3F", LIT_RED: "#E0203A", MFD: "#7DF288", SCREEN: "#141614"}
+
+    border = 2
     border_thin = 1
     shadows = {}
-    chamfer = 8
-    display_scale = 0.82
+    display_scale = 0.95
+    display_weight = "bold"
     animated = True
 
+    # B612 is the Airbus cockpit face. Its mono cut spaces punctuation oddly in a
+    # text field, so the DED lines use Share Tech Mono and the HUD keeps B612 Mono.
     families = {
-        "display": ("Michroma", "Impact"),
-        "body": ("Rajdhani Medium", "Segoe UI"),
-        "body_bold": ("Rajdhani SemiBold", "Segoe UI"),
+        "display": ("B612", "Segoe UI"),
+        "body": ("B612", "Segoe UI"),
+        "body_bold": ("B612", "Segoe UI"),
         "mono": ("Share Tech Mono", "Consolas"),
         "mono_bold": ("Share Tech Mono", "Consolas"),
+        "hud": ("B612 Mono", "Consolas"),
     }
-    body_bold_weight = "normal"
+    body_bold_weight = "bold"
     mono_bold_weight = "normal"
+    hud_weight = "bold"
 
-    copy = {**Skin.copy, "tagline": "BEST STREAM  //  MP3 V0  //  SQUARE COVER",
-            "url_hint": "Lock a YouTube link", "paste": "PASTE", "save_to": "LANDING ZONE",
-            "browse": "BROWSE", "ask": "Confirm landing zone every sortie", "convert": "ENGAGE",
-            "cancel": "ABORT", "cancelling": "ABORTING…", "ready": "Systems nominal",
-            "starting": "SPOOLING UP", "downloading": "DOWNLINK", "converting": "ENCODING",
-            "cancel_title": "ABORTING", "cancelled": "Aborted", "done": "LANDED",
-            "show": "OPEN LANDING ZONE", "error": "WARNING", "ffmpeg_ok": "FFMPEG ONLINE",
-            "ffmpeg_missing": "FFMPEG OFFLINE"}
+    copy = {**Skin.copy, "tagline": "MP3 V0 · SQ COVER",
+            "url_hint": "ENTER TARGET LINK", "paste": "PASTE", "save_to": "LANDING ZONE",
+            "browse": "BROWSE", "ask": "CONFIRM LANDING ZONE EVERY SORTIE", "convert": "ENGAGE",
+            "cancel": "ABORT", "cancelling": "ABORTING", "ready": "SYSTEMS NOMINAL",
+            "starting": "SPOOLING UP", "starting_detail": "REQUESTING STREAM FROM YOUTUBE",
+            "downloading": "DOWNLINK", "converting": "ENCODING MP3",
+            "cancel_title": "ABORTING", "cancel_detail": "DUMPING PARTIAL FILES",
+            "close_detail": "CANOPY CLOSING", "cancelled": "SORTIE ABORTED", "done": "LANDED",
+            "show": "OPEN LANDING ZONE", "error": "MASTER CAUTION",
+            "update": "UPDATE YT-DLP", "get_update": "GET UPDATE", "updating": "UPDATING",
+            "update_title": "UPDATING YT-DLP", "update_detail": "PULLING LATEST RELEASE",
+            "ffmpeg_ok": "FFMPEG OK", "ffmpeg_missing": "FFMPEG OFFLINE"}
 
-    def button_glow(self, fill):
-        return fill if fill in (self.primary, self.accent, self.ink) else None
+    # Block 50 eyebrow panels: (label, width). Left carries MASTER CAUTION, TF FAIL and
+    # two push buttons; right is the warning row, all red except DBU ON.
+    EYEBROW_LEFT = [("MASTER\nCAUTION", 66), ("TF FAIL", 50), ("F-ACK", 30), ("IFF\nIDENT", 30)]
+    EYEBROW_RIGHT = [("ENG FIRE", 36), ("ENGINE", 36), ("HYD/OIL\nPRESS", 36), ("FLCS", 36),
+                     ("DBU ON", 36), ("TO/LDG\nCONFIG", 36), ("CANOPY", 36), ("OXY LOW", 36)]
+
+    # -- background: brushed panel, glareshield, screws --
 
     def background(self, k):
+        import random
         w, h = round(W * k), round(H * k)
-        img = Image.new("RGB", (w, h), self.bg)
+        img = Image.new("RGB", (w, h), self.PANEL)
         d = ImageDraw.Draw(img)
-        top, bottom = _rgb("#070B14"), _rgb("#101C33")
-        for y in range(h):  # vertical gradient
-            t = y / h
+        rnd = random.Random(16)
+        base = _rgb(self.PANEL)
+        for y in range(h):  # brushed metal: per-row brightness jitter
+            v = rnd.randint(-6, 6)
+            d.line((0, y, w, y), fill=_hex(tuple(c + v for c in base)))
+        for _ in range(900):  # short scratches
+            x, y = rnd.randint(0, w), rnd.randint(0, h)
+            ln = rnd.randint(round(6 * k), round(40 * k))
+            v = rnd.choice((-10, 8))
+            d.line((x, y, x + ln, y), fill=_hex(tuple(c + v for c in base)))
+        # vignette on the sides
+        for i in range(round(28 * k)):
+            t = 1 - i / (28 * k)
+            col = mix(self.PANEL, "#000000", 0.35 * t)
+            d.line((i, 0, i, h), fill=col)
+            d.line((w - 1 - i, 0, w - 1 - i, h), fill=col)
+        # glareshield across the top, and a lower lip
+        gs = round(40 * k)
+        top, bottom = _rgb("#2A2D31"), _rgb(self.GLARE)
+        for y in range(gs):
+            t = y / gs
             d.line((0, y, w, y), fill=_hex(tuple(top[i] + (bottom[i] - top[i]) * t for i in range(3))))
-        grid = mix(self.bg, self.ink, 0.07)
-        step = round(20 * k)
-        for x in range(0, w, step):
-            d.line((x, 0, x, h), fill=grid, width=1)
-        for y in range(0, h, step):
-            d.line((0, y, w, y), fill=grid, width=1)
-        # horizon arc, faint
-        arc = mix(self.bg, self.ink, 0.16)
-        r = round(W * 0.9 * k)
-        cx, cy = round(W / 2 * k), round(H * 1.35 * k)
-        d.arc((cx - r, cy - r, cx + r, cy + r), 200, 340, fill=arc, width=max(1, round(1.5 * k)))
-        # scanlines
-        scan = mix(self.bg, "#000000", 0.25)
-        for y in range(0, h, max(2, round(3 * k))):
-            d.line((0, y, w, y), fill=scan, width=1)
-        # corner brackets
-        L, t, m = round(22 * k), max(1, round(2 * k)), round(10 * k)
-        for (bx, by, sx, sy) in ((m, m, 1, 1), (w - m, m, -1, 1), (m, h - m, 1, -1), (w - m, h - m, -1, -1)):
-            d.line((bx, by, bx + L * sx, by), fill=self.ink, width=t)
-            d.line((bx, by, bx, by + L * sy), fill=self.ink, width=t)
+        d.rectangle((0, gs, w, gs + round(2 * k)), fill="#0B0C0D")
+        d.rectangle((0, h - round(10 * k), w, h), fill=self.GLARE)
+        d.rectangle((0, h - round(12 * k), w, h - round(10 * k)), fill="#0B0C0D")
+        # panel seam under the HUD
+        d.line((0, round(101 * k), w, round(101 * k)), fill="#2A2D31", width=max(1, round(k)))
+        d.line((0, round(102 * k), w, round(102 * k)), fill="#4A4E53", width=1)
+        # screws
+        r = round(4 * k)
+        for (sx, sy) in ((20, 112), (540, 112), (20, 470), (540, 470)):
+            cx, cy = round(sx * k), round(sy * k)
+            d.ellipse((cx - r, cy - r, cx + r, cy + r), fill="#4A4E53", outline="#141517")
+            d.ellipse((cx - r + 1, cy - r + 1, cx + r - 2, cy + r - 2), fill="#3A3D41")
+            d.line((cx - r * 0.6, cy - r * 0.5, cx + r * 0.6, cy + r * 0.5), fill="#17191B", width=max(1, round(k)))
         return img
+
+    # -- shapes --
+
+    def _key(self, app, x, y, w, h, fill, tags):
+        """ICP keypad button: rounded, bevelled, black rim."""
+        p, c = app.px, app.c
+        deco = tuple(t for t in tags if not t.endswith(":body"))
+        c.create_polygon(flat(app, rounded_points(x, y + 2, w, h, 4)), fill="#0B0C0D", outline="", tags=deco)
+        item = c.create_polygon(flat(app, rounded_points(x, y, w, h, 4)), fill=fill, outline="#0B0C0D",
+                                width=max(1, p(1)), tags=tags)
+        c.create_line(p(x + 5), p(y + 1.5), p(x + w - 5), p(y + 1.5), fill="#4A4E53", width=max(1, p(1)), tags=deco)
+        return item
+
+    def _hazard_lens(self, app, x, y, w, h, fill, tags):
+        """Guarded pushbutton: amber and black hazard stripes round a lit lens."""
+        p, c = app.px, app.c
+        deco = tuple(t for t in tags if not t.endswith(":body"))
+        c.create_rectangle(p(x), p(y), p(x + w), p(y + h), fill="#111111", outline="#0B0C0D", width=max(1, p(1)), tags=deco)
+        sx = x - h
+        while sx < x + w:
+            pts = [(sx, y + h), (sx + 8, y + h), (sx + 8 + h, y), (sx + h, y)]
+            pts = [(min(max(px_, x), x + w), py_) for px_, py_ in pts]
+            c.create_polygon(flat(app, pts), fill=self.AMBER, outline="", tags=deco)
+            sx += 16
+        m = 7
+        item = c.create_rectangle(p(x + m), p(y + m), p(x + w - m), p(y + h - m), fill=fill, outline="#0B0C0D",
+                                  width=max(1, p(2)), tags=tags + ((tags[0] + ":lens",) if tags else ()))
+        c.create_rectangle(p(x + m + 3), p(y + m + 3), p(x + w - m - 3), p(y + h - m - 3), fill="",
+                           outline=mix(fill, "#000000", 0.35), width=1, tags=deco)
+        return item
 
     def box(self, app, x, y, w, h, fill, outline=None, border=None, shadow=None,
             shadow_color=None, tags=(), glow=None, kind="box"):
         p, c = app.px, app.c
-        outline = outline or self.ink
-        ch = self.chamfer if kind in ("button", "panel") else 4
-        if glow:
-            for i, (grow, t) in enumerate(((7, 0.10), (4, 0.20), (2, 0.34))):
-                pts = chamfer_points(x - grow, y - grow, w + 2 * grow, h + 2 * grow, ch + grow * 0.6)
-                c.create_polygon(flat(app, pts), fill=mix(self.bg, glow, t), outline="",
-                                 tags=tags + ((tags[0] + f":glow{i}",) if tags else ()))
-        b = max(1, p(border if border is not None else self.border))
-        return c.create_polygon(flat(app, chamfer_points(x, y, w, h, ch)), fill=fill, outline=outline,
-                                width=b, tags=tags)
+        if kind == "button":
+            if fill in (self.AMBER, self.LIT_RED) or (fill == self.disabled and h >= 50):
+                return self._hazard_lens(app, x, y, w, h, fill, tags)
+            return self._key(app, x, y, w, h, fill, tags)
+        if kind == "chip":
+            return c.create_polygon(flat(app, rounded_points(x, y, w, h, 3)), fill=fill, outline="#0B0C0D",
+                                    width=max(1, p(1)), tags=tags)
+        if kind == "check":
+            b = max(1, p(1))
+            return c.create_rectangle(p(x) + b / 2, p(y) + b / 2, p(x + w) - b / 2, p(y + h) - b / 2, fill=fill,
+                                      outline="#0B0C0D", width=b, tags=tags)
+        # fields, panels, screens: black glass in a bezel
+        b = p(border if border is not None else self.border)
+        half = b / 2
+        item = c.create_rectangle(p(x) + half, p(y) + half, p(x + w) - half, p(y + h) - half, fill=fill,
+                                  outline=outline or self.BEZEL, width=b, tags=tags)
+        c.create_rectangle(p(x + 3), p(y + 3), p(x + w - 3), p(y + h - 3), fill="", outline="#050605", width=1, tags=tags)
+        return item
 
     def badge(self, app, x, y, size, label, bg, fg, font, angle=-8, tags=()):
+        """Round engine gauge. A percent label drives the needle; anything else pegs it."""
+        p, c = app.px, app.c
         cx, cy, r = x + size / 2, y + size / 2, size / 2
-        hexa = [(cx + r * math.cos(math.radians(60 * i - 90)), cy + r * math.sin(math.radians(60 * i - 90))) for i in range(6)]
-        for grow, t in ((8, 0.12), (4, 0.25)):
-            g = [(cx + (r + grow) * math.cos(math.radians(60 * i - 90)), cy + (r + grow) * math.sin(math.radians(60 * i - 90))) for i in range(6)]
-            app.c.create_polygon(flat(app, g), fill=mix(self.bg, bg, t), outline="", tags=tags)
-        app.c.create_polygon(flat(app, hexa), fill=bg, outline=self.text, width=max(1, app.px(1)), tags=tags)
-        app.c.create_text(app.px(cx), app.px(cy), text=label, font=app.fonts[font], fill=fg, tags=tags)
+        frac = int(label.rstrip("%")) / 100 if label.endswith("%") else 1.0
+        c.create_oval(p(cx - r), p(cy - r), p(cx + r), p(cy + r), fill=self.BEZEL, outline="#0B0C0D", width=max(1, p(1)), tags=tags)
+        c.create_oval(p(cx - r + 3), p(cy - r + 3), p(cx + r - 3), p(cy + r - 3), fill=self.SCREEN, outline="", tags=tags)
+        for i in range(0, 11):
+            a = math.radians(-210 + 240 * i / 10)
+            L = 6 if i % 5 == 0 else 3
+            c.create_line(p(cx + (r - 6) * math.cos(a)), p(cy + (r - 6) * math.sin(a)),
+                          p(cx + (r - 6 - L) * math.cos(a)), p(cy + (r - 6 - L) * math.sin(a)),
+                          fill=self.text, width=max(1, p(1.2)), tags=tags)
+        a = math.radians(-210 + 240 * frac)
+        c.create_line(p(cx), p(cy), p(cx + (r - 9) * math.cos(a)), p(cy + (r - 9) * math.sin(a)),
+                      fill=self.text, width=max(1, p(2)), tags=tags)
+        c.create_oval(p(cx - 3), p(cy - 3), p(cx + 3), p(cy + 3), fill=self.text, outline="", tags=tags)
+        small = "mono12b" if len(label) > 4 else font
+        c.create_text(p(cx), p(cy + r * 0.5), text=label, font=app.fonts[small], fill=self.HUD, tags=tags)
 
     def progress(self, app, frac, striped, phase, tags=("prog",)):
         x, y, w, h = PROGRESS
         p, c = app.px, app.c
-        self.box(app, x, y, w, h, self.surface, tags=tags)
-        ix, iy, iw, ih = x + 3, y + 3, w - 6, h - 6
-        # tick ladder along the top edge
-        for i in range(0, 11):
+        self.box(app, x, y, w, h, self.SCREEN, tags=tags)
+        for i in range(1, 10):
             tx = x + i * w / 10
-            c.create_line(p(tx), p(y - 5), p(tx), p(y - 1), fill=self.muted, width=1, tags=tags)
+            c.create_line(p(tx), p(y + 3), p(tx), p(y + 6), fill=self.muted, width=1, tags=tags)
         if frac <= 0:
             return
-        fw = iw * frac
-        c.create_rectangle(p(ix), p(iy), p(ix + fw), p(iy + ih), fill=self.ink, outline=self.ink, tags=tags)
-        if not striped:
-            return
-        off = (phase * 2) % 12
-        sx = ix - 12 + off
-        while sx < ix + fw - 6:
-            if sx >= ix:
-                c.create_line(p(sx), p(iy), p(sx + 5), p(iy + ih / 2), p(sx), p(iy + ih), fill=self.bg, width=p(2), tags=tags)
-            sx += 12
+        ix, iy, iw, ih = x + 4, y + 4, w - 8, h - 8
+        seg, gap = 8, 2
+        n = int(iw // (seg + gap))
+        filled = round(frac * n)
+        for i in range(n):
+            sx = ix + i * (seg + gap)
+            if i < filled:
+                col = self.MFD
+            elif i == filled and striped:
+                col = self.MFD if phase % 4 < 2 else self.MFD_DIM
+            else:
+                continue
+            c.create_rectangle(p(sx), p(iy), p(sx + seg), p(iy + ih), fill=col, outline="", tags=tags)
+
+    # -- header: eyebrow lights and the HUD --
+
+    def _light(self, app, x, y, w, label, tag):
+        p, c = app.px, app.c
+        c.create_polygon(flat(app, rounded_points(x, y, w, 22, 3)), fill="#26282B", outline="#0B0C0D",
+                         width=max(1, p(1)), tags=(tag, tag + ":lens"))
+        c.create_text(p(x + w / 2), p(y + 11), text=label, font=app.fonts["tiny"], fill="#5A5D61",
+                      justify="center", tags=(tag, tag + ":text"))
+
+    def _set_light(self, app, tag, color):
+        """color None = dark."""
+        lit = color is not None
+        app.c.itemconfigure(tag + ":lens", fill=color if lit else "#26282B")
+        app.c.itemconfigure(tag + ":text", fill="#111111" if lit else "#5A5D61")
 
     def header(self, app):
         p, c = app.px, app.c
-        glow = mix(self.bg, self.ink, 0.35)
-        for dx, dy in ((1, 1), (-1, -1), (1, -1), (-1, 1)):
-            c.create_text(p(34 + dx), p(30 + dy), text="YOUTUBE / MP3", font=app.fonts["wordmark"], fill=glow, anchor="nw")
-        c.create_text(p(34), p(30), text="YOUTUBE / MP3", font=app.fonts["wordmark"], fill=self.ink, anchor="nw")
-        y = 66
-        c.create_line(p(34), p(y), p(534), p(y), fill=self.ink, width=1)
-        for i in range(0, 26):
-            tx = 34 + i * 20
-            c.create_line(p(tx), p(y), p(tx), p(y - (7 if i % 5 == 0 else 3)), fill=self.ink, width=1)
-        app.text(34, 76, self.copy["tagline"], "body12b", fill=self.muted)
-        # indicator lights
-        for i, (label, lx) in enumerate((("PWR", 452), ("NET", 486), ("FFM", 520))):
-            c.create_oval(p(lx - 5), p(31), p(lx + 5), p(41), fill="#1E3A2C", outline=self.muted, width=1, tags=(f"led:{i}",))
-            app.text(lx, 50, label, "label11b", fill=self.muted, anchor="center")
+        x = 34
+        for i, (label, w) in enumerate(self.EYEBROW_LEFT):
+            self._light(app, x, 9, w, label, f"eb:L{i}")
+            x += w + 3
+        x = 534 - sum(w for _, w in self.EYEBROW_RIGHT) - 3 * (len(self.EYEBROW_RIGHT) - 1)
+        for i, (label, w) in enumerate(self.EYEBROW_RIGHT):
+            self._light(app, x, 9, w, label, f"eb:R{i}")
+            x += w + 3
+        # HUD glass
+        gx, gy, gw, gh = 34, 46, 500, 52
+        c.create_polygon(flat(app, rounded_points(gx, gy, gw, gh, 6)), fill="#0E2014", outline="#55605A",
+                         width=max(1, p(1)))
+        self._tape(app, 0)
+        c.create_polygon(p(gx + gw / 2 - 4), p(gy + 2), p(gx + gw / 2 + 4), p(gy + 2), p(gx + gw / 2), p(gy + 7),
+                         fill=self.HUD, outline="")
+        for label, lx, anchor in (("420", gx + 14, "nw"), ("12000", gx + gw - 14, "ne")):
+            t = c.create_text(p(lx), p(gy + 24), text=label, font=app.fonts["tiny_mono"], fill=self.HUD, anchor=anchor)
+            x1, y1, x2, y2 = c.bbox(t)
+            c.create_rectangle(x1 - p(3), y1 - p(1), x2 + p(3), y2 + p(1), outline=self.HUD, width=1)
+        glow = mix("#0E2014", self.HUD, 0.3)
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            c.create_text(p(gx + gw / 2 + dx), p(gy + 30 + dy), text="YOUTUBE / MP3", font=app.fonts["hud"], fill=glow)
+        c.create_text(p(gx + gw / 2), p(gy + 30), text="YOUTUBE / MP3", font=app.fonts["hud"], fill=self.HUD)
+        # flight path marker, bobbing in tick()
+        fx, fy = gx + gw / 2, gy + 44
+        c.create_oval(p(fx - 4), p(fy - 4), p(fx + 4), p(fy + 4), outline=self.HUD, width=1, tags=("fpm",))
+        c.create_line(p(fx - 11), p(fy), p(fx - 4), p(fy), fill=self.HUD, width=1, tags=("fpm",))
+        c.create_line(p(fx + 4), p(fy), p(fx + 11), p(fy), fill=self.HUD, width=1, tags=("fpm",))
+        c.create_line(p(fx), p(fy - 4), p(fx), p(fy - 8), fill=self.HUD, width=1, tags=("fpm",))
+        c.create_text(p(gx + 14), p(gy + gh - 3), text="NAV", font=app.fonts["tiny_mono"], fill=self.HUD, anchor="sw")
+        c.create_text(p(gx + gw - 14), p(gy + gh - 3), text=self.copy["tagline"], font=app.fonts["tiny_mono"], fill=self.HUD, anchor="se")
+
+    def _tape(self, app, offset):
+        """Heading tape across the top of the HUD glass; offset scrolls it."""
+        p, c = app.px, app.c
+        c.delete("hud:tape")
+        gx, gy, gw = 34, 46, 500
+        c.create_line(p(gx + 8), p(gy + 8), p(gx + gw - 8), p(gy + 8), fill=self.HUD_DIM, width=1, tags=("hud:tape",))
+        step = 38.0
+        start = -((offset) % step)
+        i = 0
+        while start + i * step <= gw:
+            tx = gx + start + i * step
+            if gx + 30 < tx < gx + gw - 30:
+                heading = (240 + int((offset // step) * 10) + i * 10) % 360
+                c.create_line(p(tx), p(gy + 8), p(tx), p(gy + 12), fill=self.HUD, width=1, tags=("hud:tape",))
+                c.create_text(p(tx), p(gy + 18), text=f"{heading:03d}", font=app.fonts["tiny_mono"], fill=self.HUD, tags=("hud:tape",))
+            i += 1
+
+    def status_panel(self, app, kind):
+        """MFD screen behind the status text, with the AOA indexer at the right."""
+        p, c = app.px, app.c
+        x = 34 if kind == "idle" else 122
+        self.box(app, x, 372, 534 - x, 78, self.SCREEN, tags=("status",))
+        for i, (shape, dim, lit) in enumerate((("down", "#4A2A28", self.RED), ("circle", "#23402A", self.MFD), ("up", "#4A3A16", self.AMBER))):
+            cx, cy = 518, 386 + i * 22
+            tag = f"aoa:{i}"
+            if shape == "circle":
+                c.create_oval(p(cx - 6), p(cy - 6), p(cx + 6), p(cy + 6), fill=dim, outline="", tags=("status", tag))
+            elif shape == "down":
+                c.create_polygon(p(cx - 6), p(cy - 6), p(cx + 6), p(cy - 6), p(cx), p(cy + 6), fill=dim, outline="", tags=("status", tag))
+            else:
+                c.create_polygon(p(cx - 6), p(cy + 6), p(cx + 6), p(cy + 6), p(cx), p(cy - 6), fill=dim, outline="", tags=("status", tag))
+        lit = {"done": ("aoa:1", self.MFD), "working": ("aoa:2", self.AMBER)}.get(kind)
+        if lit:
+            c.itemconfigure(lit[0], fill=lit[1])
+        return True
 
     def tick(self, app, phase):
         c = app.c
-        green, red, off = "#3DFF8A", "#FF4D4D", "#1E3A2C"
-        c.itemconfigure("led:0", fill=green)
-        c.itemconfigure("led:1", fill=green if (phase // 4) % 3 else off)
-        if app.ffmpeg:
-            c.itemconfigure("led:2", fill=green)
-        else:
-            c.itemconfigure("led:2", fill=red if phase % 6 < 3 else off)
-        # breathing glow on the main button
+        kind = app.status_state[0]
+        if phase % 3 == 0:
+            self._tape(app, phase * 0.5)
+        # flight path marker bobs a pixel or two
+        dy = app.px(0.6 * math.sin(phase / 5)) - app.px(0.6 * math.sin((phase - 1) / 5))
+        c.move("fpm", 0, dy)
+        # eyebrow lights follow the app: MASTER CAUTION on error, FLCS when FFmpeg is
+        # missing (no flight controls), DBU ON while a job runs, CANOPY when the
+        # folder prompt is armed
+        self._set_light(app, "eb:L0", self.AMBER if kind == "error" and phase % 8 < 4 else None)
+        self._set_light(app, "eb:R3", self.RED if not app.ffmpeg and phase % 10 < 5 else None)
+        self._set_light(app, "eb:R4", self.AMBER if app.converting else None)
+        self._set_light(app, "eb:R6", self.RED if app.cfg.get("ask_each_time") else None)
+        # AOA amber blinks while working
+        if kind == "working":
+            c.itemconfigure("aoa:2", fill=self.AMBER if phase % 6 < 3 else "#4A3A16")
+        # the lit lens breathes
         b = app.buttons.get("convert")
-        if b and b["enabled"]:
-            t = 0.55 + 0.45 * math.sin(phase / 6)
-            for i, base in enumerate((0.10, 0.20, 0.34)):
-                c.itemconfigure(f"btn:convert:glow{i}", fill=mix(self.bg, b["fill"], base * t))
-        if app.converting and app.progress_state[1]:
+        if b and b["enabled"] and b["fill"] in (self.AMBER, self.LIT_RED):
+            t = 0.5 + 0.5 * math.sin(phase / 7)
+            c.itemconfigure("btn:convert:lens", fill=mix(b["fill"], "#FFFFFF", 0.12 * t))
+        if app.converting and app.progress_state[1] and phase % 2 == 0:
             app.redraw_progress()
 
 

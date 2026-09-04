@@ -28,10 +28,10 @@ Five looks, one layout. Pick one from the dropdown in the footer and it sticks.
 
 | | |
 |---|---|
-| ![Black Ops: matte black, stencil type, olive execute button](docs/skin-black-ops.png) | ![Fighter Jet: cockpit HUD, cyan and amber, glowing buttons](docs/skin-fighter-jet.png) |
+| ![Black Ops: matte black, stencil type, olive execute button](docs/skin-black-ops.png) | ![F-16: glareshield warning lights, green HUD, hazard-striped ENGAGE lens, engine gauge](docs/skin-fighter-jet.png) |
 | ![Chill: soft pastel blobs, rounded everything, lowercase](docs/skin-chill.png) | ![Blueprint: drafting sheet, white lines on cobalt](docs/skin-blueprint.png) |
 
-Pop Art is the default. Black Ops goes covert: hatch texture, corner brackets, a stamped EYES ONLY. Fighter Jet is a cockpit HUD with indicator lights that blink, a breathing glow on the main button and chevrons that scroll while it works. Chill is pastel, rounded and lowercase. Blueprint is a drafting sheet with a dimension line under the title and a north arrow, because why not.
+Pop Art is the default. Black Ops goes covert: hatch texture, corner brackets, a stamped EYES ONLY. F-16 is a Block 50 cockpit: the real eyebrow warning labels across the glareshield, a phosphor-green HUD with a heading tape that drifts and a flight path marker that bobs, DED-green fields, keypad buttons, a hazard-striped ENGAGE lens, an MFD status screen with the AOA indexer, and a round engine gauge for progress. The lights mean things: MASTER CAUTION on an error, FLCS when FFmpeg is missing, DBU ON while a job runs, CANOPY when the folder prompt is armed. Chill is pastel, rounded and lowercase. Blueprint is a drafting sheet with a dimension line under the title and a north arrow, because why not.
 
 Skins live in `skins.py`. One owns its palette, fonts, copy, background image and the shapes the app draws with, so adding a sixth is one class.
 

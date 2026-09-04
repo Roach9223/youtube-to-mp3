@@ -162,20 +162,22 @@ class App(tk.Tk):
 
         display, body, body_b, mono, mono_b = (fam(r) for r in ("display", "body", "body_bold", "mono", "mono_bold"))
         bw, mw = s.body_bold_weight, s.mono_bold_weight
+        hud, hw = (fam("hud"), getattr(s, "hud_weight", "bold")) if "hud" in s.families else (mono_b, mw)
 
         def f(family, size, weight="normal", scale=1.0):
             return tkfont.Font(family=family, size=-self.px(size * scale), weight=weight)
 
-        ds = s.display_scale
+        ds, dw = s.display_scale, s.display_weight
         return {
-            "wordmark": f(display, 26, scale=ds), "btn_lg": f(display, 22, scale=ds),
-            "btn": f(display, 15, scale=ds), "btn_md": f(display, 12, scale=ds),
-            "btn_sm": f(display, 11, scale=ds), "display16": f(display, 16, scale=ds),
-            "display13": f(display, 13, scale=ds), "burst17": f(display, 17, scale=ds),
-            "burst15": f(display, 15, scale=ds),
+            "wordmark": f(display, 26, dw, ds), "btn_lg": f(display, 22, dw, ds),
+            "btn": f(display, 15, dw, ds), "btn_md": f(display, 12, dw, ds),
+            "btn_sm": f(display, 11, dw, ds), "display16": f(display, 16, dw, ds),
+            "display13": f(display, 13, dw, ds), "burst17": f(display, 17, dw, ds),
+            "burst15": f(display, 15, dw, ds),
             "body12": f(body, 12), "body12b": f(body_b, 12, bw), "body13": f(body, 13),
             "body13b": f(body_b, 13, bw), "label11b": f(body_b, 11, bw),
             "mono13": f(mono, 13), "mono12": f(mono, 12), "mono12b": f(mono_b, 12, mw),
+            "tiny": f(body_b, 7, bw), "tiny_mono": f(mono, 9), "hud": f(hud, 17, hw),
         }
 
     # ----- drawing primitives (design px in, skin does the painting) -----
@@ -324,7 +326,7 @@ class App(tk.Tk):
         s = self.skin
         self.rect(34, 104, 384, 46, s.surface, shadow="md", kind="field")
         self.entry = tk.Entry(self.c, font=self.fonts["mono13"], bd=0, relief="flat", bg=s.surface,
-                              fg=s.text, insertbackground=s.text, highlightthickness=0)
+                              fg=self.field_fg, insertbackground=self.field_fg, highlightthickness=0)
         self.c.create_window(self.px(47), self.px(127), anchor="w", window=self.entry,
                              width=self.px(358), height=self.px(28))
         self.hint_shown = True
@@ -342,9 +344,10 @@ class App(tk.Tk):
         s = self.skin
         self.text(34, 168, s.copy["save_to"], "label11b")
         self.rect(34, 182, 384, 36, s.field, border=s.border_thin, kind="field")
-        self.folder_text = self.text(46, 200, "", "mono12", anchor="w")
+        self.folder_text = self.text(46, 200, "", "mono12", fill=self.field_fg, anchor="w")
         self.set_folder_label(self.cfg["download_folder"])
-        self.button("browse", 430, 182, 104, 36, s.copy["browse"], s.surface, s.text, "btn_md", shadow="sm", icon="folder")
+        self.button("browse", 430, 182, 104, 36, s.copy["browse"], self.button_fill, self.button_fg, "btn_md",
+                    shadow="sm", icon="folder")
         self.rect(34, 232, 20, 20, s.surface, tags=("chk",), kind="check")
         self.text(64, 242, s.copy["ask"], "body13", anchor="w", tags=("chk",))
         self.c.tag_bind("chk", "<Button-1>", lambda e: self.toggle_ask())
@@ -354,14 +357,35 @@ class App(tk.Tk):
         s = self.skin
         x = self.chip(34, 478, f"yt-dlp {yt_dlp.version.__version__}", s.surface, s.text)
         if self.ffmpeg:
-            x = self.chip(x + 8, 478, s.copy["ffmpeg_ok"], s.accent, s.accent_fg)
+            x = self.chip(x + 8, 478, s.copy["ffmpeg_ok"], s.chip_ok or s.accent, s.chip_ok_fg or s.accent_fg)
         else:
             x = self.chip(x + 8, 478, s.copy["ffmpeg_missing"], s.error, s.error_fg)
         sx = max(262, x + 10)
-        self.button("skin", sx, 478, 376 - sx, 30, s.name, s.surface, s.text, "btn_sm", shadow="sm",
+        self.button("skin", sx, 478, 376 - sx, 30, s.name, self.button_fill, self.button_fg, "btn_sm", shadow="sm",
                     icon="chevron", icon_side="right")
         self.button("update", 384, 478, 150, 30, s.copy["get_update"] if FROZEN else s.copy["update"],
-                    s.surface, s.text, "btn_sm", shadow="sm", icon="refresh")
+                    self.button_fill, self.button_fg, "btn_sm", shadow="sm", icon="refresh")
+
+    # skin colours with their fallbacks
+    @property
+    def field_fg(self):
+        return self.skin.field_fg or self.skin.text
+
+    @property
+    def button_fill(self):
+        return self.skin.button or self.skin.surface
+
+    @property
+    def button_fg(self):
+        return self.skin.button_fg or self.skin.text
+
+    @property
+    def status_fg(self):
+        return self.skin.status_fg or self.skin.text
+
+    @property
+    def status_muted(self):
+        return self.skin.status_muted or self.skin.muted
 
     def chip(self, x, y, label, bg, fg) -> float:
         w = self.fonts["label11b"].measure(label) / self.k + 20
@@ -394,18 +418,20 @@ class App(tk.Tk):
         item_h, w = 30, 150
         x = b["x"]
         y0 = b["y"] - 8 - item_h * len(ORDER)
-        self.rect(x, y0, w, item_h * len(ORDER), s.surface, shadow="md", tags=("menu",), kind="panel")
+        bg, fg = self.button_fill, self.button_fg
+        hover = s.hover_color(bg) if s.hover_color(bg) != bg else s.field
+        self.rect(x, y0, w, item_h * len(ORDER), bg, shadow="md", tags=("menu",), kind="panel")
         for i, key in enumerate(ORDER):
             sk = SKINS[key]
             y = y0 + i * item_h
             tag = f"menu:{key}"
             c.create_rectangle(self.px(x + 2), self.px(y + 2), self.px(x + w - 2), self.px(y + item_h - 2),
-                               fill=s.surface, outline="", tags=("menu", tag, tag + ":bg"))
+                               fill=bg, outline="", tags=("menu", tag, tag + ":bg"))
             self.icon("check" if key == s.key else "palette", x + 18, y + item_h / 2, 12,
-                      s.text if key == s.key else s.muted, tags=("menu", tag))
-            self.text(x + 34, y + item_h / 2, sk.name, "body13b", anchor="w", tags=("menu", tag))
-            c.tag_bind(tag, "<Enter>", lambda e, t=tag: c.itemconfigure(t + ":bg", fill=s.hover_color(s.surface) if s.hover_color(s.surface) != s.surface else s.field))
-            c.tag_bind(tag, "<Leave>", lambda e, t=tag: c.itemconfigure(t + ":bg", fill=s.surface))
+                      fg if key == s.key else s.muted, tags=("menu", tag))
+            self.text(x + 34, y + item_h / 2, sk.name, "body13b", fill=fg, anchor="w", tags=("menu", tag))
+            c.tag_bind(tag, "<Enter>", lambda e, t=tag: c.itemconfigure(t + ":bg", fill=hover))
+            c.tag_bind(tag, "<Leave>", lambda e, t=tag: c.itemconfigure(t + ":bg", fill=bg))
             c.tag_bind(tag, "<Button-1>", lambda e, k=key: self.apply_skin(k))
         self.menu_open = True
 
@@ -465,28 +491,37 @@ class App(tk.Tk):
         self.status_state = ("idle", msg, role)
         s = self.skin
         self.clear_status()
-        color = {"muted": s.muted, "text": s.text, "error": s.error if s.error_fg != s.error else s.text}[role]
-        self.text(34, 380, s.copy.get(msg, msg), "body13b", fill=color, tags=("status",), width=self.px(500))
+        inset = s.status_panel(self, "idle")
+        color = {"muted": self.status_muted, "text": self.status_fg,
+                 "error": s.error if s.error_fg != s.error else s.text}[role]
+        self.text(46 if inset else 34, 380, s.copy.get(msg, msg), "body13b", fill=color, tags=("status",),
+                  width=self.px(480))
 
     def show_working(self, label: str, detail: str = "", frac: float | None = None):
         self.status_state = ("working", label, detail, frac)
         s = self.skin
         self.clear_status()
+        inset = s.status_panel(self, "working")
         tx = 34
         if frac is not None:
             self.badge(34, 372, 74, f"{frac:.0%}", s.working, s.working_fg, "burst17", tags=("status",))
             tx = 122
-        self.text(tx, 380, s.copy.get(label, label), "display16", tags=("status",))
-        self.text(tx, 402, self.fit(s.copy.get(detail, detail), "body12", 534 - tx), "body12", fill=s.muted, tags=("status",))
+        if inset:
+            tx += 12
+        self.text(tx, 380, s.copy.get(label, label), "display16", fill=self.status_fg, tags=("status",))
+        self.text(tx, 402, self.fit(s.copy.get(detail, detail), "body12", 500 - tx), "body12",
+                  fill=self.status_muted, tags=("status",))
 
     def show_done(self, path: Path):
         self.status_state = ("done", path)
         s = self.skin
         self.clear_status()
+        inset = s.status_panel(self, "done")
         self.last_output = path
+        tx = 134 if inset else 126
         self.badge(34, 372, 78, s.copy["done"], s.accent2, s.accent2_fg, "burst15", angle=6, tags=("status",))
-        self.text(126, 380, self.fit(path.name, "mono12b", 408), "mono12b", tags=("status",))
-        self.button("open_folder", 126, 404, 170, 32, s.copy["show"], s.surface, s.text, "btn_sm",
+        self.text(tx, 380, self.fit(path.name, "mono12b", 500 - tx), "mono12b", fill=self.status_fg, tags=("status",))
+        self.button("open_folder", tx, 404, 170, 32, s.copy["show"], self.button_fill, self.button_fg, "btn_sm",
                     shadow="sm", icon="open", tags=("status",))
 
     def show_error(self, msg: str):
@@ -518,7 +553,7 @@ class App(tk.Tk):
     def _entry_focus_in(self, _e):
         if self.hint_shown:
             self.entry.delete(0, "end")
-            self.entry.configure(fg=self.skin.text)
+            self.entry.configure(fg=self.field_fg)
             self.hint_shown = False
 
     def _entry_focus_out(self, _e):
