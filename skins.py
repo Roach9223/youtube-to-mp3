@@ -960,4 +960,4 @@ class Blueprint(Skin):
 
 
 SKINS = {s.key: s for s in (Skin, BlackOps, FighterJet, Chill, Blueprint)}
-ORDER = ["pop", "ops", "jet", "chill", "blueprint"]
+ORDER = ["jet", "pop", "ops", "chill", "blueprint"]

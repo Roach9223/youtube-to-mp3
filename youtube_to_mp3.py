@@ -41,7 +41,7 @@ DEFAULT_CONFIG = {
     "download_folder": str(Path.home() / "Downloads"),
     "ask_each_time": False,
     "ffmpeg_location": "",  # blank means search next to the app, then PATH
-    "skin": "pop",
+    "skin": "jet",
 }
 
 W, H = 560, 520
