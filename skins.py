@@ -718,43 +718,54 @@ class FighterJet(Skin):
             app.redraw_progress()
 
 
-# ---- Chill: soft, rounded, low contrast ----
+# ---- Irie 420: rasta stripes, smoke, and a joint for a progress bar ----
 
 class Chill(Skin):
     key = "chill"
-    name = "chill"
+    name = "IRIE 420"
 
-    bg = "#F6F1EA"
-    ink = "#DDD4C8"
-    text = "#3B3550"
-    muted = "#8A8399"
-    placeholder = "#B3ACBE"
-    surface = "#FFFFFF"
-    field = "#FBF8F3"
-    primary = "#8FB99A"
-    primary_fg = "#1F2A22"
-    accent = "#F4B08C"
-    accent_fg = "#3B2A22"
-    accent2 = "#B9AEE8"
-    accent2_fg = "#2C2542"
-    working = "#F4B08C"
-    working_fg = "#3B2A22"
-    cancel = "#E8E1F5"
-    cancel_fg = "#3B3550"
-    error = "#E07A7A"
-    error_fg = "#3B3550"
-    disabled = "#ECE7E0"
-    disabled_fg = "#B3ACBE"
-    hover = {"#8FB99A": "#7FAA8B", "#F4B08C": "#EF9F78", "#FFFFFF": "#FBF7F1", "#E8E1F5": "#DED5F0"}
-    shadow_color = "#E9E1D6"
+    RASTA_RED = "#D7263D"
+    GOLD = "#F2C230"
+    GREEN = "#2E9E4F"
+    CREAM = "#F4E7C3"
+    PAPER = "#EFE3C4"
+    ASH = "#8E8E8E"
+    EMBER = "#FF6A00"
+
+    bg = "#16231A"
+    ink = GOLD
+    text = CREAM
+    muted = "#A9B89A"
+    placeholder = "#6E8264"
+    surface = "#22342A"
+    field = "#1C2C22"
+    primary = GREEN
+    primary_fg = CREAM
+    accent = GOLD
+    accent_fg = "#1B1B1B"
+    accent2 = RASTA_RED
+    accent2_fg = CREAM
+    working = GOLD
+    working_fg = "#1B1B1B"
+    cancel = RASTA_RED
+    cancel_fg = CREAM
+    error = RASTA_RED
+    error_fg = CREAM
+    disabled = "#3A4A3E"
+    disabled_fg = "#7B8B7E"
+    chip_ok = GREEN
+    chip_ok_fg = CREAM
+    hover = {GREEN: "#3BB55E", GOLD: "#FFD255", "#22342A": "#2B4234", RASTA_RED: "#E8394F"}
+    shadow_color = "#0B130E"
 
     border = 2
     border_thin = 2
     shadows = {"lg": 6, "md": 4, "sm": 3}
     radius = 14
+    animated = True
 
     families = {
-        "display": ("Varela Round", "Segoe UI"),
+        "display": ("Righteous", "Segoe UI"),
         "body": ("Varela Round", "Segoe UI"),
         "body_bold": ("Varela Round", "Segoe UI"),
         "mono": ("DM Mono", "Consolas"),
@@ -763,27 +774,56 @@ class Chill(Skin):
     body_bold_weight = "normal"
     mono_bold_weight = "normal"
 
-    copy = {**Skin.copy, "tagline": "best audio  ·  mp3 v0  ·  square cover art",
-            "url_hint": "paste a youtube link", "paste": "paste", "save_to": "save to",
-            "browse": "browse", "ask": "ask where to save each time", "convert": "convert",
-            "cancel": "stop", "cancelling": "stopping…", "ready": "ready when you are",
-            "starting": "starting", "starting_detail": "asking youtube for the audio",
-            "downloading": "downloading", "converting": "converting to mp3",
-            "cancel_title": "stopping", "cancel_detail": "cleaning up", "close_detail": "closing in a moment",
-            "cancelled": "stopped", "done": "done", "show": "show in folder", "error": "hmm",
-            "update": "update yt-dlp", "get_update": "get update", "updating": "updating…",
-            "update_title": "updating yt-dlp", "update_detail": "fetching the latest release",
-            "ffmpeg_ok": "ffmpeg ok", "ffmpeg_missing": "ffmpeg missing"}
+    copy = {**Skin.copy, "tagline": "best buds only  ·  mp3 v0  ·  square cover art",
+            "url_hint": "pass the youtube link", "paste": "PASS IT", "save_to": "STASH SPOT",
+            "browse": "STASH", "ask": "ask where to stash it every time", "convert": "BLAZE IT",
+            "cancel": "PUT IT OUT", "cancelling": "STUBBING…", "ready": "irie, mon. ready when you are",
+            "starting": "SPARKING UP", "starting_detail": "asking youtube for the good stuff",
+            "downloading": "TOKING", "converting": "ROLLING THE MP3",
+            "cancel_title": "PUTTING IT OUT", "cancel_detail": "stubbing it out, cleaning the tray",
+            "close_detail": "closing up shop in a sec", "cancelled": "put out. no worries, mon",
+            "done": "BAKED", "show": "OPEN THE STASH", "error": "BUMMER, MON",
+            "update": "FRESH YT-DLP", "get_update": "GET FRESH", "updating": "ROLLING…",
+            "update_title": "ROLLING A FRESH YT-DLP", "update_detail": "pip is doing its thing, relax",
+            "ffmpeg_ok": "FFMPEG LIT", "ffmpeg_missing": "FFMPEG DRY"}
+
+    # -- background: smoky green, rasta bands, a faint leaf --
 
     def background(self, k):
         w, h = round(W * k), round(H * k)
         img = Image.new("RGB", (w, h), self.bg)
-        blobs = Image.new("RGB", (w, h), self.bg)
-        d = ImageDraw.Draw(blobs)
-        for (cx, cy, r, color) in ((500, 60, 150, "#F8D3BE"), (60, 470, 130, "#DCD5F3"), (520, 470, 110, "#D4E6D8")):
-            d.ellipse((round((cx - r) * k), round((cy - r) * k), round((cx + r) * k), round((cy + r) * k)), fill=color)
-        blobs = blobs.filter(ImageFilter.GaussianBlur(radius=45 * k))
-        return Image.blend(img, blobs, 0.85)
+        d = ImageDraw.Draw(img)
+        # rasta bands top and bottom
+        for i, col in enumerate((self.RASTA_RED, self.GOLD, self.GREEN)):
+            d.rectangle((0, round(i * 4 * k), w, round((i + 1) * 4 * k)), fill=col)
+            d.rectangle((0, h - round((3 - i) * 4 * k), w, h - round((2 - i) * 4 * k)), fill=col)
+        # a big faint leaf, bottom right: seven leaflets fanned round a stem
+        leaf = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        ld = ImageDraw.Draw(leaf)
+        cx, cy = 470 * k, 470 * k
+        for i, ang in enumerate((-90, -60, -120, -30, -150, -5, -175)):
+            L = (150 if i == 0 else 130 if i < 3 else 105 if i < 5 else 80) * k
+            wd = 26 * k
+            tile = Image.new("RGBA", (round(L * 2), round(wd * 2)), (0, 0, 0, 0))
+            td = ImageDraw.Draw(tile)
+            pts = [(L * 0.55, wd), (L * 0.75, wd - wd * 0.6), (L * 1.05, wd - wd * 0.95), (L * 1.5, wd - wd * 0.7),
+                   (L * 2 - 2, wd), (L * 1.5, wd + wd * 0.7), (L * 1.05, wd + wd * 0.95), (L * 0.75, wd + wd * 0.6)]
+            td.polygon(pts, fill=(60, 120, 70, 70))
+            td.line((L * 0.55, wd, L * 2 - 2, wd), fill=(40, 90, 50, 70), width=max(1, round(1.5 * k)))
+            tile = tile.rotate(-ang, expand=True, resample=Image.BICUBIC)
+            leaf.alpha_composite(tile, (round(cx - tile.width / 2), round(cy - tile.height / 2)))
+        ld.line((cx, cy, cx, cy + 60 * k), fill=(60, 120, 70, 70), width=round(5 * k))
+        img.paste(leaf, (0, 0), leaf)
+        # smoke drifting up the left side
+        smoke = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        sd = ImageDraw.Draw(smoke)
+        for (sx, sy, r, a) in ((60, 460, 60, 40), (95, 380, 70, 34), (55, 300, 80, 28), (110, 210, 95, 22), (70, 120, 110, 16)):
+            sd.ellipse(((sx - r) * k, (sy - r * 0.7) * k, (sx + r) * k, (sy + r * 0.7) * k), fill=(244, 231, 195, a))
+        smoke = smoke.filter(ImageFilter.GaussianBlur(radius=22 * k))
+        img.paste(smoke, (0, 0), smoke)
+        return img
+
+    # -- shapes --
 
     def _radius(self, kind, h):
         if kind == "chip":
@@ -805,27 +845,78 @@ class Chill(Skin):
                                 width=b, tags=tags)
 
     def badge(self, app, x, y, size, label, bg, fg, font, angle=-8, tags=()):
-        p = app.px
-        app.c.create_oval(p(x), p(y + 4), p(x + size), p(y + size + 4), fill=self.shadow_color, outline="", tags=tags)
-        app.c.create_oval(p(x), p(y), p(x + size), p(y + size), fill=bg, outline="", tags=tags)
-        app.c.create_text(p(x + size / 2), p(y + size / 2), text=label, font=app.fonts[font], fill=fg, tags=tags)
+        """Rasta rings round the label."""
+        p, c = app.px, app.c
+        cx, cy = x + size / 2, y + size / 2
+        for r, col in ((size / 2, self.RASTA_RED), (size / 2 - 6, self.GOLD), (size / 2 - 12, self.GREEN)):
+            c.create_oval(p(cx - r), p(cy - r), p(cx + r), p(cy + r), fill=col, outline="", tags=tags)
+        r = size / 2 - 18
+        c.create_oval(p(cx - r), p(cy - r), p(cx + r), p(cy + r), fill=self.bg, outline="", tags=tags)
+        c.create_text(p(cx), p(cy), text=label, font=app.fonts["mono12b" if len(label) > 4 else font],
+                      fill=self.CREAM, tags=tags)
 
     def progress(self, app, frac, striped, phase, tags=("prog",)):
+        """A joint. It burns from the left: ash behind, ember at the front, paper ahead."""
         x, y, w, h = PROGRESS
-        c = app.c
-        c.create_polygon(flat(app, rounded_points(x, y, w, h, 8)), fill=self.surface, outline=self.ink,
-                         width=max(1, app.px(2)), tags=tags)
+        p, c = app.px, app.c
+        tip = 16
+        body_w = w - tip
+        # paper
+        c.create_polygon(flat(app, rounded_points(x, y, body_w, h, 5)), fill=self.PAPER, outline="#C9B98F",
+                         width=max(1, p(1)), tags=tags)
+        for i in range(1, 12):  # faint seam lines on the paper
+            sx = x + i * body_w / 12
+            c.create_line(p(sx), p(y + 2), p(sx + 6), p(y + h - 2), fill="#E2D4AE", width=1, tags=tags)
+        # twisted tip
+        c.create_polygon(p(x + body_w - 2), p(y + 2), p(x + w), p(y + h / 2 - 2), p(x + w - 3), p(y + h / 2 + 3),
+                         p(x + body_w - 2), p(y + h - 2), fill=self.PAPER, outline="#C9B98F", width=max(1, p(1)), tags=tags)
         if frac <= 0:
             return
-        fw = max(10, (w - 6) * frac)
-        c.create_polygon(flat(app, rounded_points(x + 3, y + 3, fw, h - 6, 5)), fill=self.primary, outline="", tags=tags)
+        fw = body_w * frac
+        # ash
+        c.create_polygon(flat(app, rounded_points(x, y, max(fw, 6), h, 5)), fill=self.ASH, outline="", tags=tags)
+        for i in range(0, int(fw // 9)):
+            ax = x + 4 + i * 9
+            c.create_line(p(ax), p(y + 3), p(ax + 2), p(y + h - 3), fill="#6F6F6F", width=1, tags=tags)
+        # ember, flickering while working
+        hot = phase % 4 < 2 if striped else True
+        ex = x + fw
+        c.create_oval(p(ex - 6), p(y - 1), p(ex + 6), p(y + h + 1), fill=self.EMBER if hot else "#D94F00", outline="", tags=tags)
+        c.create_oval(p(ex - 3), p(y + 3), p(ex + 3), p(y + h - 3), fill="#FFD166" if hot else "#FFB347", outline="", tags=tags)
+        if striped:  # small puffs of smoke off the ember, kept in the gap under the button
+            for i in range(3):
+                t = ((phase + i * 5) % 15) / 15
+                px_, py_ = ex + 8 + 5 * math.sin(t * 6.28 + i) + i * 4, y - 3 - t * 8
+                r = 1.5 + t * 2.5
+                col = mix(self.bg, self.CREAM, 0.7 * (1 - t))
+                c.create_oval(p(px_ - r), p(py_ - r), p(px_ + r), p(py_ + r), fill=col, outline="", tags=tags)
 
     def header(self, app):
-        app.text(34, 24, "youtube to mp3", "wordmark")
+        p, c = app.px, app.c
+        app.text(34, 20, "YOUTUBE 2 MP3", "wordmark", fill=self.GOLD)
+        tw = app.fonts["wordmark"].measure("YOUTUBE 2 MP3") / app.k
+        for i, col in enumerate((self.RASTA_RED, self.GOLD, self.GREEN)):
+            c.create_rectangle(p(34), p(56 + i * 4), p(34 + tw), p(59 + i * 4), fill=col, outline="")
         f = app.fonts["body12b"]
-        tw = f.measure(self.copy["tagline"]) / app.k + 28
-        self.box(app, 34, 66, tw, 26, self.accent2, border=0, kind="chip")
-        app.text(34 + tw / 2, 79, self.copy["tagline"], "body12b", fill=self.accent2_fg, anchor="center")
+        cw = f.measure(self.copy["tagline"]) / app.k + 28
+        self.box(app, 34, 74, cw, 24, self.surface, border=0, kind="chip")
+        app.text(34 + cw / 2, 86, self.copy["tagline"], "body12b", fill=self.CREAM, anchor="center")
+        # the clock says what the clock always says
+        cx, cy, r = 506, 46, 22
+        c.create_oval(p(cx - r), p(cy - r), p(cx + r), p(cy + r), fill=self.surface, outline=self.GOLD, width=max(1, p(2)))
+        for i in range(12):
+            a = math.radians(i * 30)
+            c.create_line(p(cx + (r - 3) * math.sin(a)), p(cy - (r - 3) * math.cos(a)),
+                          p(cx + (r - 6) * math.sin(a)), p(cy - (r - 6) * math.cos(a)), fill=self.CREAM, width=1)
+        for ang, ln, wd in ((130, r * 0.5, 3), (120, r * 0.78, 2)):
+            a = math.radians(ang)
+            c.create_line(p(cx), p(cy), p(cx + ln * math.sin(a)), p(cy - ln * math.cos(a)), fill=self.CREAM, width=max(1, p(wd)))
+        c.create_oval(p(cx - 2), p(cy - 2), p(cx + 2), p(cy + 2), fill=self.GOLD, outline="")
+        app.text(cx, cy + r + 4, "4:20", "label11b", fill=self.GOLD, anchor="n")
+
+    def tick(self, app, phase):
+        if app.converting and app.progress_state[1]:
+            app.redraw_progress()
 
 
 # ---- Blueprint: drafting sheet ----

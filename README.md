@@ -33,10 +33,10 @@ Five looks, one layout. Pick one from the dropdown in the footer and it sticks.
 | | |
 |---|---|
 | ![F-16 mid-download: engine gauge at 62 percent, DBU ON lit, AOA amber](docs/skin-fighter-jet.png) | ![Pop Art: halftone dots, ink borders, hard shadows](docs/skin-pop-art.png) |
-| ![Black Ops: matte black, stencil type, olive execute button](docs/skin-black-ops.png) | ![Chill: soft pastel blobs, rounded everything, lowercase](docs/skin-chill.png) |
+| ![Black Ops: matte black, stencil type, olive execute button](docs/skin-black-ops.png) | ![Irie 420: rasta stripes, smoke, a joint for a progress bar](docs/skin-chill.png) |
 | ![Blueprint: drafting sheet, white lines on cobalt](docs/skin-blueprint.png) | |
 
-F-16 is the default, a Block 50 cockpit: the real eyebrow warning labels across the glareshield, a phosphor-green HUD with a heading tape that drifts and a flight path marker that bobs, DED-green fields, keypad buttons, a hazard-striped ENGAGE lens, an MFD status screen with the AOA indexer, and a round engine gauge for progress. The lights mean things: MASTER CAUTION on an error, FLCS when FFmpeg is missing, DBU ON while a job runs, CANOPY when the folder prompt is armed. Pop Art is halftone dots, ink borders and hard shadows. Black Ops goes covert: hatch texture, corner brackets, a stamped EYES ONLY. Chill is pastel, rounded and lowercase. Blueprint is a drafting sheet with a dimension line under the title and a north arrow, because why not.
+F-16 is the default, a Block 50 cockpit: the real eyebrow warning labels across the glareshield, a phosphor-green HUD with a heading tape that drifts and a flight path marker that bobs, DED-green fields, keypad buttons, a hazard-striped ENGAGE lens, an MFD status screen with the AOA indexer, and a round engine gauge for progress. The lights mean things: MASTER CAUTION on an error, FLCS when FFmpeg is missing, DBU ON while a job runs, CANOPY when the folder prompt is armed. Pop Art is halftone dots, ink borders and hard shadows. Black Ops goes covert: hatch texture, corner brackets, a stamped EYES ONLY. Irie 420 is rasta stripes, smoke drifting up the side, a clock stuck on 4:20, and a progress bar that is a joint burning down with a flickering ember. Hit BLAZE IT and wait for BAKED. Blueprint is a drafting sheet with a dimension line under the title and a north arrow, because why not.
 
 Skins live in `skins.py`. One owns its palette, fonts, copy, background image and the shapes the app draws with, so adding a sixth is one class.
 
