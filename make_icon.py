@@ -86,12 +86,12 @@ def draw_icon(size: int, c: dict) -> Image.Image:
         d.line((cx - 10 * u, cy + 30 * u, cx, cy + 39 * u, cx + 10 * u, cy + 30 * u), fill=c["chevron"],
                width=max(lw, round(s * 0.03)), joint="curve")
     # the play symbol, optionally inside a rounded "tube"
-    tw, th = 34 * u, 24 * u
+    tw, th = (46 * u, 32 * u) if size <= 24 else (34 * u, 24 * u)  # bigger target at taskbar sizes
     if c.get("tube_fill"):
         d.rounded_rectangle((cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2), radius=7 * u, fill=c["tube_fill"])
     elif c.get("tube"):
         d.rounded_rectangle((cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2), radius=7 * u, outline=c["tube"], width=lw)
-    ph = 13 * u if (c.get("tube") or c.get("tube_fill")) else 22 * u
+    ph = (18 * u if size <= 24 else 13 * u) if (c.get("tube") or c.get("tube_fill")) else 22 * u
     pw = ph * 0.95
     px0 = cx - pw / 2 + 1.5 * u
     d.polygon([(px0, cy - ph / 2), (px0 + pw, cy), (px0, cy + ph / 2)], fill=c["play"])
