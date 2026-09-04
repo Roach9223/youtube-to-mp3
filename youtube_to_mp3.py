@@ -139,18 +139,14 @@ class App(tk.Tk):
 
         self.title("YouTube to MP3")
         self.resizable(False, False)
+        # The .ico carries a hand-rendered frame for every size Windows asks for.
+        # Setting a photo icon as well would make Tk rescale it itself, and that
+        # comes out soft in the taskbar.
         icon = RES_DIR / "icon.ico"
         if icon.exists():
             try:
                 self.iconbitmap(default=str(icon))
             except tk.TclError:
-                pass
-        png = RES_DIR / "icon.png"
-        if png.exists():
-            try:  # the taskbar and alt-tab pick the large one from here
-                self.icon_photo = ImageTk.PhotoImage(file=str(png))
-                self.iconphoto(True, self.icon_photo)
-            except (tk.TclError, OSError):
                 pass
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 

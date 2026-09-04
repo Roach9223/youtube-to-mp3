@@ -60,13 +60,14 @@ def paste_head(img, s, head_cx, head_cy, rx, ry, color, tilt=20):
 
 
 def draw_icon(size: int, c: dict) -> Image.Image:
-    ss = 4
+    ss = 8 if size <= 48 else 4  # heavier supersampling where every pixel counts
     s = size * ss
     u = s / 100
     img = Image.new("RGBA", (s, s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     d.polygon(chamfer(s, round(s * 0.14)), fill=c["tile"])
-    lw = max(2, round(s * 0.022))
+    # strokes never thinner than 1.4 real px, or they turn to haze in a taskbar
+    lw = max(round(ss * 1.4), round(s * 0.022))
 
     cx = cy = s / 2
     r = s * 0.36
@@ -99,7 +100,8 @@ def draw_icon(size: int, c: dict) -> Image.Image:
 
 
 def write_icon(c: dict) -> None:
-    sizes = [256, 128, 64, 48, 32, 16]
+    # every size Windows picks from at 100 / 125 / 150 / 200 percent scaling
+    sizes = [256, 128, 96, 64, 48, 40, 32, 24, 20, 16]
     frames = [draw_icon(s, c) for s in sizes]
     out = Path(__file__).with_name("icon.ico")
     frames[0].save(out, format="ICO", sizes=[(s, s) for s in sizes], append_images=frames[1:])
