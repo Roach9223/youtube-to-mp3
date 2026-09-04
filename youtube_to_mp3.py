@@ -96,6 +96,16 @@ def enable_dpi_awareness() -> None:
             pass
 
 
+def claim_app_identity() -> None:
+    """Give the window its own taskbar identity. Without this, running from source
+    groups it under python.exe and the taskbar shows the Python icon."""
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("OdinOfficial.YouTubeToMP3")
+        except (OSError, AttributeError):
+            pass
+
+
 def register_fonts() -> None:
     """Load the bundled fonts for this process only (FR_PRIVATE), no install needed."""
     if sys.platform != "win32":
@@ -132,8 +142,15 @@ class App(tk.Tk):
         icon = RES_DIR / "icon.ico"
         if icon.exists():
             try:
-                self.iconbitmap(str(icon))
+                self.iconbitmap(default=str(icon))
             except tk.TclError:
+                pass
+        png = RES_DIR / "icon.png"
+        if png.exists():
+            try:  # the taskbar and alt-tab pick the large one from here
+                self.icon_photo = ImageTk.PhotoImage(file=str(png))
+                self.iconphoto(True, self.icon_photo)
+            except (tk.TclError, OSError):
                 pass
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
@@ -819,6 +836,7 @@ class App(tk.Tk):
 
 
 if __name__ == "__main__":
+    claim_app_identity()
     enable_dpi_awareness()
     register_fonts()
     App().mainloop()
